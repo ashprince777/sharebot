@@ -10,7 +10,8 @@ import {
   Menu, 
   X, 
   Bell,
-  Play 
+  Play,
+  Settings as SettingsIcon
 } from "lucide-react";
 import { logout } from "../store/authSlice.ts";
 import { RootState } from "../store/index.ts";
@@ -32,6 +33,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     { name: "AI Scanner", href: "/scanner", icon: Search },
     { name: "Virtual Portfolio", href: "/portfolio", icon: Briefcase },
     { name: "AI Backtester", href: "/backtester", icon: Play },
+    { name: "Settings", href: "/settings", icon: SettingsIcon },
   ];
 
   const handleLogout = () => {

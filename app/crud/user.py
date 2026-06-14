@@ -19,6 +19,20 @@ async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]
     return result.scalars().first()
 
 
+async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[User]:
+    """Retrieve list of users from DB."""
+    result = await db.execute(select(User).offset(skip).limit(limit).order_by(User.created_at.desc()))
+    return list(result.scalars().all())
+
+
+async def delete_user(db: AsyncSession, db_obj: User) -> bool:
+    """Remove user from database."""
+    await db.delete(db_obj)
+    await db.flush()
+    return True
+
+
+
 async def create_user(db: AsyncSession, obj_in: UserCreate) -> User:
     """Hash password and insert new user into DB."""
     db_obj = User(

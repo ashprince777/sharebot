@@ -342,10 +342,37 @@ async def pretrain_ai_models():
             print(f"[ERROR] Pre-training failed: {str(e)}")
 
 
+async def seed_admin_user(session: AsyncSession):
+    print("Seeding admin user...")
+    from app.models.user import User
+    from app.core.security import get_password_hash
+    
+    # Check if admin already exists
+    stmt = select(User).where(User.email == "admin@sharebot.com")
+    res = await session.execute(stmt)
+    admin = res.scalars().first()
+    
+    if not admin:
+        admin = User(
+            email="admin@sharebot.com",
+            hashed_password=get_password_hash("admin123"),
+            full_name="Administrator",
+            is_active=True,
+            is_verified=True,
+            role="admin"
+        )
+        session.add(admin)
+        print("  Created admin@sharebot.com user.")
+    else:
+        print("  admin@sharebot.com user already exists.")
+    await session.commit()
+
+
 async def main():
     print("Starting database seeding process...")
     async with AsyncSessionLocal() as session:
         await clear_database(session)
+        await seed_admin_user(session)
         await seed_stock_metadata(session)
         await seed_historical_candles(session, count=500)
     

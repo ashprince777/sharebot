@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Scanner from "./pages/Scanner.tsx";
 import Portfolio from "./pages/Portfolio.tsx";
 import Backtester from "./pages/Backtester.tsx";
+import Settings from "./pages/Settings.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,14 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute>
               <Backtester />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
