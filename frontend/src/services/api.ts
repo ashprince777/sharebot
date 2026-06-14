@@ -1,7 +1,23 @@
 import axios from "axios";
 
+const isLocalhost = typeof window !== "undefined" && (
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+);
+
+const getAPIUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    if (envUrl.includes("localhost") && !isLocalhost) {
+      return "https://sharebot-api.onrender.com/api/v1";
+    }
+    return envUrl;
+  }
+  return isLocalhost ? "http://localhost:8000/api/v1" : "https://sharebot-api.onrender.com/api/v1";
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://sharebot-api.onrender.com/api/v1",
+  baseURL: getAPIUrl(),
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,7 +49,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to refresh access token
-          const res = await axios.post(`${import.meta.env.VITE_API_URL || "https://sharebot-api.onrender.com/api/v1"}/auth/refresh`, {
+          const res = await axios.post(`${getAPIUrl()}/auth/refresh`, {
             refresh_token: refreshToken,
           });
           
