@@ -371,13 +371,37 @@ async def seed_admin_user(session: AsyncSession):
 async def main():
     print("Starting database seeding process...")
     async with AsyncSessionLocal() as session:
-        await clear_database(session)
+        # Check if we already have stocks metadata seeded
+        stmt = select(StockMetadata).limit(1)
+        res = await session.execute(stmt)
+        has_data = res.scalars().first() is not None
+        
+        if has_data:
+            print("Database already contains stock metadata. Skipping metadata seeding.")
+        else:
+            await clear_database(session)
+            await seed_admin_user(session)
+            await seed_stock_metadata(session)
+            
+        # Check if we have candle data
+        stmt_candles = select(StockOHLCV).limit(1)
+        res_candles = await session.execute(stmt_candles)
+        has_candles = res_candles.scalars().first() is not None
+        
+        if not has_candles:
+            await seed_historical_candles(session, count=500)
+        else:
+            print("Database already contains historical candles. Skipping candle downloading.")
+            
+        # Always make sure the admin user exists
         await seed_admin_user(session)
-        await seed_stock_metadata(session)
-        await seed_historical_candles(session, count=500)
-    
-    # Train models on seeded data
-    await pretrain_ai_models()
+        
+    # Always try to train models on startup to populate saved_models/ in container memory
+    try:
+        await pretrain_ai_models()
+    except Exception as e:
+        print(f"Warning: model pretraining failed/skipped: {e}")
+        
     print("Database seeding completed successfully!")
 
 

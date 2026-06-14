@@ -5,7 +5,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: alembic upgrade head && python seed_data.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
@@ -13,6 +13,8 @@ services:
         fromDatabase:
           name: sharebot-db
           property: connectionString
+      - key: BACKEND_CORS_ORIGINS
+        value: "https://sharebot-alpha.vercel.app,http://localhost:3000,http://localhost:5173"
       - key: SECRET_KEY
         generateValue: true
       - key: TELEGRAM_BOT_TOKEN

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api/v1",
+  baseURL: import.meta.env.VITE_API_URL || "https://sharebot-api.onrender.com/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,7 +33,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to refresh access token
-          const res = await axios.post(`${import.meta.env.VITE_API_URL || "/api/v1"}/auth/refresh`, {
+          const res = await axios.post(`${import.meta.env.VITE_API_URL || "https://sharebot-api.onrender.com/api/v1"}/auth/refresh`, {
             refresh_token: refreshToken,
           });
           
