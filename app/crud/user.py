@@ -45,15 +45,16 @@ async def create_user(db: AsyncSession, obj_in: UserCreate) -> User:
     )
     db.add(db_obj)
     await db.flush()
+    await db.refresh(db_obj)
     return db_obj
 
 
 async def update_user(db: AsyncSession, db_obj: User, obj_in: UserUpdate) -> User:
     """Update user properties and hash password if modified."""
     update_data = obj_in.model_dump(exclude_unset=True)
-    if "password" in update_data and update_data["password"]:
-        hashed_password = get_password_hash(update_data["password"])
-        db_obj.hashed_password = hashed_password
+    if "password" in update_data:
+        if update_data["password"]:
+            db_obj.hashed_password = get_password_hash(update_data["password"])
         del update_data["password"]
 
     for field, value in update_data.items():
@@ -61,6 +62,7 @@ async def update_user(db: AsyncSession, db_obj: User, obj_in: UserUpdate) -> Use
 
     db.add(db_obj)
     await db.flush()
+    await db.refresh(db_obj)
     return db_obj
 
 

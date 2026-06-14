@@ -11,6 +11,7 @@ from app.schemas.user import (
     UserResponse,
     UserCreate,
     UserUpdate,
+    UserUpdateAdmin,
     WatchlistCreate,
     WatchlistResponse,
     WatchlistUpdate,
@@ -169,6 +170,7 @@ async def create_new_user(
         )
     new_user = await crud_user.create_user(db, obj_in=user_in)
     await db.commit()
+    await db.refresh(new_user)
     return new_user
 
 
@@ -177,7 +179,7 @@ async def update_user(
     user_id: uuid.UUID,
     *,
     db: AsyncSession = Depends(get_db),
-    user_in: UserUpdate,
+    user_in: UserUpdateAdmin,
     current_user: User = Depends(deps.get_current_admin_user),
 ) -> Any:
     """Update a user's details (Admin only)."""
@@ -196,6 +198,7 @@ async def update_user(
             )
     updated_user = await crud_user.update_user(db, db_obj=user, obj_in=user_in)
     await db.commit()
+    await db.refresh(updated_user)
     return updated_user
 
 

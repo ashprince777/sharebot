@@ -37,6 +37,10 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class UserUpdateAdmin(UserUpdate):
+    role: Optional[str] = None
+
+
 class UserResponse(UserBase):
     id: uuid.UUID
     created_at: datetime

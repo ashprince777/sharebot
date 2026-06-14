@@ -13,7 +13,7 @@ const getAPIUrl = (): string => {
     }
     return envUrl;
   }
-  return isLocalhost ? "http://localhost:8000/api/v1" : "https://sharebot-api.onrender.com/api/v1";
+  return isLocalhost ? "/api/v1" : "https://sharebot-api.onrender.com/api/v1";
 };
 
 const api = axios.create({
