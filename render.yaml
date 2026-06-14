@@ -1,0 +1,24 @@
+services:
+  # FastAPI Backend Web Service
+  - type: web
+    name: sharebot-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sharebot-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+
+databases:
+  # PostgreSQL Database Instance
+  - name: sharebot-db
+    plan: free
