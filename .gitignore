@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environments and Secrets
+.env
+.venv/
+env/
+venv/
+ENV/
+*.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Frontend Node packages and build
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.svelte-kit/
+frontend/.next/
+
+# Backend distribution and builds
+dist/
+build/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Python cache & tests
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+htmlcov/
+.mypy_cache/
+.pyre/
+
+# Database files and logs
+pgdata/
+*.log
+local_db.sqlite3
+
+# Local helper files and backups
+add_missing.py
+add_missing_clean.py
+inspect_scalers.py
+test_scaling.py
+test_api_prediction.py
+backup_*.sh
+*.backup
