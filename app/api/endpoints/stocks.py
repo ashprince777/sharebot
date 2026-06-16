@@ -252,7 +252,7 @@ async def add_stock_prediction(
 @router.get("/{symbol}/forecast")
 async def get_stock_forecast(
     symbol: str,
-    horizon: str = Query("1d", regex="^(1d)$"),
+    horizon: str = Query("1d", pattern="^(1d)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:

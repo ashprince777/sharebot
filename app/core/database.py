@@ -2,13 +2,14 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from app.core.config import settings
 
+from sqlalchemy import NullPool
+
 # Create engine with asyncpg driver support
+# Use NullPool for Serverless Environments (Vercel) to prevent connection leaks
 engine = create_async_engine(
     settings.async_database_url,
     echo=False,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20
+    poolclass=NullPool,
 )
 
 # Async session factory

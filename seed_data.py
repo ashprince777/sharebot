@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timezone, timedelta
 import random
+import pandas as pd
 import yfinance as yf
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
@@ -276,16 +277,26 @@ async def seed_historical_candles(session: AsyncSession, count: int = 150):
         return
 
     print(f"  Downloading data for {len(tickers_to_download)} tickers at once...")
-    data = yf.download(tickers_to_download, period="2y", interval="1d", group_by="ticker")
+    data = yf.download(tickers_to_download, period="2y", interval="1d", group_by="ticker", auto_adjust=True)
+
+    # yfinance returns a flat DataFrame for a single ticker, MultiIndex for multiple
+    is_multi = isinstance(data.columns, pd.MultiIndex) if hasattr(data, 'columns') else False
 
     for ticker_ns, symbol in symbol_map.items():
         try:
-            # Handle case where download fails or returns empty for a specific ticker
-            if ticker_ns not in data.columns.levels[0]:
-                print(f"  ⚠️ No data found in download for {symbol}")
-                continue
-                
-            ticker_data = data[ticker_ns].dropna(subset=["Open", "High", "Low", "Close", "Volume"])
+            if is_multi:
+                # Multi-ticker download: columns are (ticker, OHLCV)
+                if ticker_ns not in data.columns.get_level_values(0):
+                    print(f"  ⚠️ No data found in download for {symbol}")
+                    continue
+                ticker_data = data[ticker_ns].dropna(subset=["Open", "High", "Low", "Close", "Volume"])
+            else:
+                # Single-ticker download: flat DataFrame
+                if len(tickers_to_download) == 1 and not data.empty:
+                    ticker_data = data.dropna(subset=["Open", "High", "Low", "Close", "Volume"])
+                else:
+                    print(f"  ⚠️ No data found in download for {symbol}")
+                    continue
             
             candles_to_add = []
             for timestamp, row in ticker_data.iterrows():
@@ -396,11 +407,14 @@ async def main():
         # Always make sure the admin user exists
         await seed_admin_user(session)
         
-    # Always try to train models on startup to populate saved_models/ in container memory
-    try:
-        await pretrain_ai_models()
-    except Exception as e:
-        print(f"Warning: model pretraining failed/skipped: {e}")
+    # Only pre-train models if candles were freshly seeded (skip on restarts to avoid timeout)
+    if not has_candles:
+        try:
+            await pretrain_ai_models()
+        except Exception as e:
+            print(f"Warning: model pretraining failed/skipped: {e}")
+    else:
+        print("Skipping AI model pre-training (data already exists). Models will train on-demand.")
         
     print("Database seeding completed successfully!")
 
