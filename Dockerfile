@@ -21,13 +21,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy project files
-COPY app/ ./app
-COPY migrations/ ./migrations
-COPY alembic.ini .
+# Add a non-root user (Hugging Face Spaces requires user ID 1000)
+RUN useradd -m -u 1000 user
+USER user
 
-# Expose FastAPI port
-EXPOSE 8000
+# Set home directory and path for the new user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
+
+WORKDIR $HOME/app
+
+# Copy project files and assign ownership to the user
+COPY --chown=user . $HOME/app/
+
+# Expose FastAPI port (Hugging Face Spaces defaults to 7860)
+EXPOSE 7860
 
 # Run alembic migrations on start, then launch backend
-CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000
+CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 7860
