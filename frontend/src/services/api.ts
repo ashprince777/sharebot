@@ -8,12 +8,10 @@ const isLocalhost = typeof window !== "undefined" && (
 const getAPIUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) {
-    if (envUrl.includes("localhost") && !isLocalhost) {
-      return "https://sharebot-api.onrender.com/api/v1";
-    }
     return envUrl;
   }
-  return isLocalhost ? "/api/v1" : "https://sharebot-api.onrender.com/api/v1";
+  // When deployed on Vercel together, the frontend and backend share the same domain
+  return "/api/v1";
 };
 
 const api = axios.create({
