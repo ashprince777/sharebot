@@ -27,12 +27,26 @@ interface IndicatorData {
 interface ChartProps {
   candles: CandleData[];
   indicators: IndicatorData[];
+  livePrice?: number | null;
 }
 
-const StockChart: React.FC<ChartProps> = ({ candles, indicators }) => {
+const StockChart: React.FC<ChartProps> = ({ candles, indicators, livePrice }) => {
   const [hoverIndex, setHoverIndex] = React.useState<number | null>(null);
 
-  if (!candles || candles.length === 0) {
+  const displayCandles = React.useMemo(() => {
+    if (!candles || candles.length === 0) return [];
+    if (!livePrice) return candles;
+
+    const copy = [...candles];
+    const last = { ...copy[copy.length - 1] };
+    last.close = livePrice;
+    if (livePrice > last.high) last.high = livePrice;
+    if (livePrice < last.low) last.low = livePrice;
+    copy[copy.length - 1] = last;
+    return copy;
+  }, [candles, livePrice]);
+
+  if (!displayCandles || displayCandles.length === 0) {
     return (
       <div className="h-96 flex items-center justify-center bg-slate-900/50 border border-border rounded-xl">
         <p className="text-slate-500">No chart data available</p>
@@ -48,7 +62,7 @@ const StockChart: React.FC<ChartProps> = ({ candles, indicators }) => {
   const totalHeight = priceHeight + gap + indicatorHeight;
 
   // Find price bounds
-  const prices = candles.flatMap((c) => [c.high, c.low]);
+  const prices = displayCandles.flatMap((c) => [c.high, c.low]);
   
   // Include Bollinger Bands in price bounds if available
   const activeIndicators = indicators || [];
@@ -72,7 +86,7 @@ const StockChart: React.FC<ChartProps> = ({ candles, indicators }) => {
   };
 
   // Bar spacing
-  const barWidth = width / candles.length;
+  const barWidth = width / displayCandles.length;
   const barSpacing = Math.max(2, barWidth * 0.2);
 
   // Compute SVG paths for indicators
@@ -128,8 +142,8 @@ const StockChart: React.FC<ChartProps> = ({ candles, indicators }) => {
   };
 
   // Active Candle hover detail
-  const activeIndex = hoverIndex !== null ? hoverIndex : candles.length - 1;
-  const activeCandle = candles[activeIndex];
+  const activeIndex = hoverIndex !== null ? hoverIndex : displayCandles.length - 1;
+  const activeCandle = displayCandles[activeIndex];
   const activeIndicator = activeIndicators[activeIndex];
 
   const formatDate = (dateStr: string) => {
@@ -195,8 +209,8 @@ const StockChart: React.FC<ChartProps> = ({ candles, indicators }) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const percentage = x / rect.width;
-            const index = Math.floor(percentage * candles.length);
-            if (index >= 0 && index < candles.length) {
+            const index = Math.floor(percentage * displayCandles.length);
+            if (index >= 0 && index < displayCandles.length) {
               setHoverIndex(index);
             }
           }}
@@ -290,7 +304,7 @@ const StockChart: React.FC<ChartProps> = ({ candles, indicators }) => {
           )}
 
           {/* Candlesticks */}
-          {candles.map((candle, idx) => {
+          {displayCandles.map((candle, idx) => {
             const isBullish = candle.close >= candle.open;
             const x = idx * barWidth + barWidth / 2;
             const wickY1 = getPriceY(candle.high);

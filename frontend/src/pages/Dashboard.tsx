@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "../services/api.ts";
+import { useLivePrice } from "../services/yahooStreamer.ts";
 import DashboardLayout from "../components/DashboardLayout.tsx";
 import StockChart from "../components/StockChart.tsx";
 import { 
@@ -31,6 +32,9 @@ const Dashboard: React.FC = () => {
   const [alertError, setAlertError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  // 0. Live WebSocket Data
+  const { liveData, isConnected } = useLivePrice(activeSymbol);
 
   // 1. Fetch available stocks
   const { data: stocksList, isLoading: stocksLoading } = useQuery<StockItem[]>({
@@ -274,10 +278,23 @@ const Dashboard: React.FC = () => {
                 {syncMutation.isPending ? "Syncing..." : "Sync Live Data"}
               </button>
 
-              {lastPrice && (
+              {(liveData?.price || lastPrice) && (
                 <div className="text-right">
-                  <span className="text-xl font-extrabold tracking-tight">{currencySymbol}{lastPrice.toFixed(2)}</span>
-                  <span className="block text-[10px] text-slate-500 uppercase font-semibold mt-0.5">Last Closing Price</span>
+                  <span className={`text-xl font-extrabold tracking-tight ${
+                    liveData ? (liveData.change >= 0 ? 'text-bullish' : 'text-bearish') : ''
+                  }`}>
+                    {currencySymbol}{(liveData?.price || lastPrice).toFixed(2)}
+                  </span>
+                  <span className="block text-[10px] text-slate-500 uppercase font-semibold mt-0.5">
+                    {isConnected ? (
+                      <span className="flex items-center justify-end gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-bullish animate-pulse"></span>
+                        Live Market
+                      </span>
+                    ) : (
+                      "Last Closing Price"
+                    )}
+                  </span>
                 </div>
               )}
             </div>
@@ -289,7 +306,7 @@ const Dashboard: React.FC = () => {
               <p className="text-xs text-slate-500 font-semibold">Running ML Feature Transformations...</p>
             </div>
           ) : (
-            <StockChart candles={ohlcvData || []} indicators={indicatorData || []} />
+            <StockChart candles={ohlcvData || []} indicators={indicatorData || []} livePrice={liveData?.price} />
           )}
         </div>
 
